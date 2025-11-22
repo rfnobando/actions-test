@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       short_commit: ${{ steps.get_short_commit.outputs.short }}
     steps:
@@ -32,7 +32,7 @@ jobs:
           docker push registry.eginartedelgado.tech/actions-test:${{ steps.get_short_commit.outputs.short }}
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Setup SSH
