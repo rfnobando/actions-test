@@ -10,11 +10,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: See project files
-        run: ls -la
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/tmp
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/tmp/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/tmp/known_hosts
+          chmod 600 ~/tmp/id_ed25519
+          ssh \
+            -i ~/tmp/id_ed25519 \
+            -o UserKnownHostsFile=~/tmp/known_hosts \
+            -p "${{ secrets.SSH_PORT }}" \
+            "${{ secrets.SSH_USER }}"@"${{ secrets.SERVER_IP }}" "
+              cd /srv
+              touch from_ghactions
+            "
 
-      - name: Cat server.js
-        run: cat server.js
-
-      - name: Build Docker image
-        run: docker build -t hello-node:test .
+      # - name: Build Docker image
+      #   run: docker build -t hello-node:test .
