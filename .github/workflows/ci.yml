@@ -14,7 +14,8 @@ jobs:
 
       - name: Get short commit
         id: get_short_commit
-        run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        # run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
 
       - name: Docker login
         run: |
