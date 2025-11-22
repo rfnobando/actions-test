@@ -15,7 +15,6 @@ jobs:
       - name: Get short commit
         id: get_short_commit
         run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        # run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
 
       - name: Docker login
         run: |
@@ -24,9 +23,11 @@ jobs:
             --username ${{ secrets.REGISTRY_USER }}  \
             --password-stdin
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        run: docker build -t actions-test:${{ steps.get_short_commit.outputs.short }} .
+
+      - name: Push Docker image
         run: |
-          docker build -t actions-test:${{ steps.get_short_commit.outputs.short }} .
           docker tag actions-test:${{ steps.get_short_commit.outputs.short }} registry.eginartedelgado.tech/actions-test:${{ steps.get_short_commit.outputs.short }}
           docker push registry.eginartedelgado.tech/actions-test:${{ steps.get_short_commit.outputs.short }}
 
