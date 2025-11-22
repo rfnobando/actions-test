@@ -10,20 +10,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - name: Get short commit SHA
         run: |
-          mkdir -p ~/tmp
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/tmp/id_ed25519
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/tmp/known_hosts
-          chmod 600 ~/tmp/id_ed25519
-          ssh \
-            -i ~/tmp/id_ed25519 \
-            -o UserKnownHostsFile=~/tmp/known_hosts \
-            -p "${{ secrets.SSH_PORT }}" \
-            "${{ secrets.SSH_USER }}"@"${{ secrets.SERVER_IP }}" "
-              cd /srv
-              touch from_ghactions
-            "
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "Short commit: $SHORT_SHA"
 
       # - name: Build Docker image
-      #   run: docker build -t hello-node:test .
+      #   run: docker build -t actions-test .
+
+      # - name: Setup SSH
+      #   run: |
+      #     mkdir -p ~/tmp
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/tmp/id_ed25519
+      #     echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/tmp/known_hosts
+      #     chmod 600 ~/tmp/id_ed25519
+      #     ssh \
+      #       -i ~/tmp/id_ed25519 \
+      #       -o UserKnownHostsFile=~/tmp/known_hosts \
+      #       -p "${{ secrets.SSH_PORT }}" \
+      #       "${{ secrets.SSH_USER }}"@"${{ secrets.SERVER_IP }}" "
+      #         cd /srv
+      #         touch from_ghactions
+      #       "
+
+
