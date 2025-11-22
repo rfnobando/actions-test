@@ -7,24 +7,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      short_commit: ${{ steps.get_short_commit.outputs.short }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get short commit SHA
-        run: SHORT_COMMIT=$(git rev-parse --short HEAD)
+      - name: Get short commit
+        id: get_short_commit
+        run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
 
       - name: Docker login
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login \
+          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login \
             registry.eginartedelgado.tech \
-            --username "${{ secrets.REGISTRY_USER }}"  \
+            --username ${{ secrets.REGISTRY_USER }}  \
             --password-stdin
 
       - name: Build and push Docker image
         run: |
-          docker build -t actions-test:$SHORT_COMMIT .
-          docker tag actions-test:$SHORT_COMMIT registry.eginartedelgado.tech/actions-test:$SHORT_COMMIT
-          docker push registry.eginartedelgado.tech/actions-test:$SHORT_COMMIT
+          docker build -t actions-test:${{ steps.get_short_commit.outputs.short }} .
+          docker tag actions-test:${{ steps.get_short_commit.outputs.short }} registry.eginartedelgado.tech/actions-test:${{ steps.get_short_commit.outputs.short }}
+          docker push registry.eginartedelgado.tech/actions-test:${{ steps.get_short_commit.outputs.short }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,16 +45,16 @@ jobs:
           ssh \
             -i ~/tmp/id_ed25519 \
             -o UserKnownHostsFile=~/tmp/known_hosts \
-            -p "${{ secrets.SSH_PORT }}" \
-            "${{ secrets.SSH_USER }}"@"${{ secrets.SERVER_IP }}" '
+            -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
               set -e
 
-              echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login \
+              echo ${{ secrets.REGISTRY_PASSWORD }} | docker login \
                 registry.eginartedelgado.tech \
-                --username "${{ secrets.REGISTRY_USER }}"  \
+                --username ${{ secrets.REGISTRY_USER }}  \
                 --password-stdin
 
-              docker pull registry.eginartedelgado.tech/actions-test:$SHORT_COMMIT
+              docker pull registry.eginartedelgado.tech/actions-test:${{ needs.build.outputs.short_commit }}
               docker stop actions-test 2>/dev/null || true
               docker rm actions-test 2>/dev/null || true
 
@@ -59,5 +62,6 @@ jobs:
                 --name actions-test \
                 --restart unless-stopped \
                 --network main_network \
-                registry.eginartedelgado.tech/actions-test:$SHORT_COMMIT
-            '
+                registry.eginartedelgado.tech/actions-test:${{ needs.build.outputs.short_commit }}
+            "
+            
